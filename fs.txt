@@ -1,0 +1,53 @@
+#version 150
+
+uniform vec3 lightPos;
+uniform vec3 eyePos;
+uniform sampler2D diffuse_texture;
+uniform float lighting;
+uniform float fillAmount;
+uniform float isBillboard;
+
+in vec2 v_texcoord;
+in vec3 v_normal;
+in vec3 v_pw;
+
+out vec4 color;
+
+void main(){
+    vec4 tc = texture(diffuse_texture,v_texcoord);
+	if(tc.a < 0.1)
+	{
+		discard;
+	}
+    
+    if (lighting == 1.0)
+    {
+        vec3 N = normalize(v_normal);
+        vec3 V = normalize(eyePos - v_pw);
+        vec3 L = (lightPos - v_pw);
+        float Ldist = length(L);
+        L = 1.0/Ldist * L;
+        float dp = dot(L,N);
+        if(isBillboard == 1.0)
+        {
+            dp += (1 - dp) * 0.7;
+        }
+        dp = clamp(dp,0.0,1.0);
+        vec3 R = reflect(-L,N);
+        //float sp = dot(V,R);
+        //sp *= sign(dp);
+        //sp = pow(sp,32.0); 
+        //sp = clamp(sp,0.0,1.0);
+        color = vec4( dp*tc.rgb, tc.a);// + vec3(sp)  ,tc.a );
+        if(fillAmount > 0.0)
+        {
+            vec4 tmp = vec4(mix(vec3(1,0,0), vec3(0,1,0), fillAmount), tc.a);
+	    color = vec4(mix(tmp.rgb, color.rgb, 0.25f), tc.a);
+        }
+    }
+    else
+    {
+        color = tc;
+    }
+}
+

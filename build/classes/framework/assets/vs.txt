@@ -1,0 +1,50 @@
+#version 150
+
+in vec3 a_position;
+in vec2 a_texcoord;
+in vec3 a_normal;
+
+out vec2 v_texcoord;
+out vec3 v_normal;
+out vec3 v_pw;
+
+uniform mat4 projMatrix;
+uniform mat4 viewMatrix;
+uniform mat4 worldMatrix;
+
+uniform vec3 cameraU;
+uniform vec3 cameraV;
+uniform float isBillboard;
+uniform float billboardScale;
+uniform vec3 eyePos;
+
+void main()
+{
+
+	if(isBillboard == 0.0)
+	{
+		v_texcoord = a_texcoord;
+		
+		vec4 p = vec4( a_position.xyz, 1.0 );
+		p = p * worldMatrix;
+		v_pw = p.xyz;
+		p = p * viewMatrix;
+		p = p * projMatrix;
+		v_normal = (vec4(a_normal,0.0) * worldMatrix).xyz;
+		gl_Position = p;
+	}
+	else
+	{
+		v_texcoord = a_texcoord;  
+		vec2 t = (a_texcoord - vec2(0.5)) * billboardScale;
+		vec4 p = vec4(0,0,0,1);
+		p = p * worldMatrix;
+		v_pw = p.xyz;
+    		vec4 n = vec4(a_normal.xyz, 0.0) * worldMatrix;
+		p = p + vec4(cameraU * t.x,0) + vec4(cameraV * t.y,0);
+		p = p * viewMatrix;
+		p = p * projMatrix;
+		v_normal = normalize(eyePos - v_pw);//(vec4(a_normal,0.0) * worldMatrix).xyz;
+		gl_Position = p;
+	}
+}
